@@ -13,7 +13,10 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.trabajopractio7.MainActivity;
+import com.example.trabajopractio7.R;
 import com.example.trabajopractio7.databinding.FragmentHomeBinding;
+import com.google.android.gms.maps.SupportMapFragment;
+
 
 public class HomeFragment extends Fragment {
 
@@ -32,7 +35,15 @@ public class HomeFragment extends Fragment {
                 binding.tvMostrar.setText(location.getLatitude()+" "+location.getLongitude());
             }
         });
-
+        mv.getMMapa().observe(getActivity(), new Observer<HomeViewModel.MapaActual>() {
+            @Override
+            public void onChanged(HomeViewModel.MapaActual mapaActual) {
+                //SupportMapFragment smf= (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+                SupportMapFragment smf= (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+                smf.getMapAsync(mapaActual);
+            }
+        });
+        mv.obtenerMapa();
         return root;
     }
 
