@@ -1,5 +1,7 @@
 package com.example.trabajopractio7.ui.Ubicacion;
 
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+
 import android.Manifest;
 import android.app.Application;
 import android.content.Context;
@@ -42,13 +44,15 @@ public class HomeViewModel extends AndroidViewModel {
     private MutableLiveData<Location> mLocation;
     private FusedLocationProviderClient fused;
 
+    private static final LatLng MERLO= new LatLng(-32.320094, -65.0157063);
+    private static final LatLng SANLUIS=new LatLng(-33.280576,-66.332482);
+    private static final LatLng ULP=new LatLng(-33.150720,-66.306864);
+
     public HomeViewModel(@NonNull Application application) {
         super(application);
         context = application.getApplicationContext();
         fused = LocationServices.getFusedLocationProviderClient(context);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            obtenerUltimaUbicacion();
-        }
+
     }
 
     public LiveData<Location> getMLocation() {
@@ -61,9 +65,10 @@ public class HomeViewModel extends AndroidViewModel {
     @RequiresApi(api = Build.VERSION_CODES.P)
     public void obtenerUltimaUbicacion() {
         // promesa de localizacion
-        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(context, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
+            //ActivityCompat.requestPermissions(getApplication(), new String[]{ACCESS_FINE_LOCATION}, 1000);
             // here to request the missing permissions, and then overriding
             //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
             //                                          int[] grantResults)
@@ -73,7 +78,7 @@ public class HomeViewModel extends AndroidViewModel {
         }
         Task<Location> tarea = fused.getLastLocation();
         //para obtener el actuvuty
-        tarea.addOnSuccessListener(context.getMainExecutor(), new OnSuccessListener<Location>() {
+        tarea.addOnSuccessListener(new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(Location location) {
                 //el postValue espera que llegue el dato
@@ -84,35 +89,6 @@ public class HomeViewModel extends AndroidViewModel {
                 }
             }
         });
-    }
-
-    public void lecturaPermanente() {
-        LocationRequest request = LocationRequest.create();
-        request.setInterval(5000);
-        request.setFastestInterval(5000);
-        request.setPriority(Priority.PRIORITY_HIGH_ACCURACY);
-
-        LocationCallback callback = new LocationCallback() {
-            @Override
-            public void onLocationResult(@NonNull LocationResult locationResult) {
-                if (locationResult != null) {
-
-                    Location location = locationResult.getLastLocation();
-                    mLocation.postValue(location);
-                }
-            }
-        };
-        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        fused.requestLocationUpdates(request, callback, null);
     }
 
     public LiveData<MapaActual> getMMapa() {
@@ -129,44 +105,48 @@ public class HomeViewModel extends AndroidViewModel {
 
 
     public class MapaActual implements OnMapReadyCallback {
+        private LatLng Actual;
 
-        @Override
+        @RequiresApi(api = Build.VERSION_CODES.P)
         public void onMapReady(@NonNull GoogleMap googleMap) {
-            googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-            /*if (locActual != null) {
-                LatLng ubicacionActual = new LatLng(locActual.getLatitude(), locActual.getLongitude());
-                googleMap.addMarker(new MarkerOptions().position(ubicacionActual).title("Ubicación Actual"));
+            GoogleMap mapa = googleMap;
+            mapa.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+            obtenerUltimaUbicacion();
 
+            // Obtener la ubicación actual
+            /*if (mLocation.getValue() != null) {
+                LatLng Actual = new LatLng(mLocation.getValue().getLatitude(),mLocation.getValue().getLongitude());
+
+            } else {
+
+                Actual = new LatLng(-33.280576, -66.332482);
+            }*/
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            mapa.setMyLocationEnabled(true);
+            //agregue mas marcadores para que sea mas facil encontrar la ubicacion
+            googleMap.addMarker(new MarkerOptions().position(SANLUIS).title("San Luis"));
+            googleMap.addMarker(new MarkerOptions().position(ULP).title("ULP"));
+            googleMap.addMarker(new MarkerOptions().position(MERLO).title("Merlo"));
+                // Mover la cámara a la ubicación actual
                 CameraPosition camPos = new CameraPosition.Builder()
-                        .target(ubicacionActual)
-                        .zoom(19)
+                        .target(SANLUIS)
+                        .zoom(8)
                         .bearing(45) // Inclinación
                         .tilt(70)
                         .build();
                 CameraUpdate update = CameraUpdateFactory.newCameraPosition(camPos);
-                googleMap.animateCamera(update);
-            } else {*/
+                mapa.animateCamera(update);
 
-                LatLng SANLUIS = new LatLng(-33.280576, -66.332482);
-                googleMap.addMarker(new MarkerOptions().position(SANLUIS).title("San Luis"));
 
-            LatLng actual= new LatLng(getMLocation().getValue().getLatitude(),getMLocation().getValue().getLongitude());
-            googleMap.addMarker(new MarkerOptions().position(actual).title("Actual"));
-                //Location loc= getMLocation().getValue();
-                //LatLng actual= new LatLng(loc.getLatitude(), loc.getLongitude());
-                //Marcadores
-
-                //efecto de camar;
-                CameraPosition camPos = new CameraPosition.Builder()
-                        .target(SANLUIS)
-                        .zoom(19)
-                        .bearing(45)//inclinacion
-                        .tilt(70)
-                        .build();
-                CameraUpdate update = CameraUpdateFactory.newCameraPosition(camPos);
-                googleMap.animateCamera(update);
-
-            }
-        }
+        }}
 
 }

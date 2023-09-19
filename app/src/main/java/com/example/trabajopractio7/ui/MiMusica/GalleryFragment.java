@@ -49,5 +49,7 @@ public class GalleryFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+        //para que al salir detenga el servicio, lo saque para escuchar musica con el mapa
+        //getActivity().stopService(intent);
     }
 }
