@@ -1,5 +1,6 @@
 package com.example.trabajopractio7.ui.MiMusica;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -16,7 +17,7 @@ import com.example.trabajopractio7.databinding.FragmentGalleryBinding;
 public class GalleryFragment extends Fragment {
 
     private FragmentGalleryBinding binding;
-
+    private Intent intent;
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         GalleryViewModel galleryViewModel =
@@ -24,14 +25,26 @@ public class GalleryFragment extends Fragment {
 
         binding = FragmentGalleryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+        intent= new Intent(getActivity(), ServicioMusical.class);
+        binding.btIniciar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                intent= new Intent(getActivity(), ServicioMusical.class);
+                getActivity().startService(intent);
+            }
+        });
+        binding.btParar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                intent= new Intent(getActivity(), ServicioMusical.class);
+                getActivity().stopService(intent);
+            }
+        });
 
 
         return root;
     }
-    public void iniciarServicio(View view){
-        Intent intent= new Intent(getActivity(), ServicioMusical.class);
-        getActivity().startService(intent);
-    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();

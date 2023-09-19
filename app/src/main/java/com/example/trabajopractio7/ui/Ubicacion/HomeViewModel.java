@@ -1,15 +1,20 @@
 package com.example.trabajopractio7.ui.Ubicacion;
 
+import android.Manifest;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Build;
+import android.util.Log;
 
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -30,16 +35,20 @@ import com.google.android.gms.tasks.Task;
 
 import java.io.Closeable;
 
-public class HomeViewModel extends ViewModel {
+public class HomeViewModel extends AndroidViewModel {
     private Context context;
     private MutableLiveData<MapaActual> mMapa;
+    private Location locActual;
     private MutableLiveData<Location> mLocation;
     private FusedLocationProviderClient fused;
 
     public HomeViewModel(@NonNull Application application) {
-        super((Closeable) application);
+        super(application);
         context = application.getApplicationContext();
         fused = LocationServices.getFusedLocationProviderClient(context);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            obtenerUltimaUbicacion();
+        }
     }
 
     public LiveData<Location> getMLocation() {
@@ -49,6 +58,7 @@ public class HomeViewModel extends ViewModel {
         return mLocation;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.P)
     public void obtenerUltimaUbicacion() {
         // promesa de localizacion
         if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -69,6 +79,8 @@ public class HomeViewModel extends ViewModel {
                 //el postValue espera que llegue el dato
                 if (location != null) {
                     mLocation.postValue(location);
+                    locActual = location;
+
                 }
             }
         });
@@ -102,15 +114,16 @@ public class HomeViewModel extends ViewModel {
         }
         fused.requestLocationUpdates(request, callback, null);
     }
-    public LiveData<MapaActual> getMMapa(){
-        if(mMapa==null){
-            mMapa= new MutableLiveData<>();
+
+    public LiveData<MapaActual> getMMapa() {
+        if (mMapa == null) {
+            mMapa = new MutableLiveData<>();
         }
         return mMapa;
     }
 
-    public void obtenerMapa(){
-        MapaActual ma= new MapaActual();
+    public void obtenerMapa() {
+        MapaActual ma = new MapaActual();
         mMapa.setValue(ma);
     }
 
@@ -120,22 +133,40 @@ public class HomeViewModel extends ViewModel {
         @Override
         public void onMapReady(@NonNull GoogleMap googleMap) {
             googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-            Location loc= getMLocation().getValue();
-            LatLng actual= new LatLng(loc.getLatitude(), loc.getLongitude());
-            //Marcadores
+            /*if (locActual != null) {
+                LatLng ubicacionActual = new LatLng(locActual.getLatitude(), locActual.getLongitude());
+                googleMap.addMarker(new MarkerOptions().position(ubicacionActual).title("Ubicación Actual"));
 
-            googleMap.addMarker(new MarkerOptions().position(actual).title("Ubicacion Actual"));
+                CameraPosition camPos = new CameraPosition.Builder()
+                        .target(ubicacionActual)
+                        .zoom(19)
+                        .bearing(45) // Inclinación
+                        .tilt(70)
+                        .build();
+                CameraUpdate update = CameraUpdateFactory.newCameraPosition(camPos);
+                googleMap.animateCamera(update);
+            } else {*/
 
-            //efecto de camara
-            CameraPosition camPos= new CameraPosition.Builder()
-                    .target(actual)
-                    .zoom(19)
-                    .bearing(45)//inclinacion
-                    .tilt(70)
-                    .build();
-            CameraUpdate update= CameraUpdateFactory.newCameraPosition(camPos);
-            googleMap.animateCamera(update);
+                LatLng SANLUIS = new LatLng(-33.280576, -66.332482);
+                googleMap.addMarker(new MarkerOptions().position(SANLUIS).title("San Luis"));
+
+            LatLng actual= new LatLng(getMLocation().getValue().getLatitude(),getMLocation().getValue().getLongitude());
+            googleMap.addMarker(new MarkerOptions().position(actual).title("Actual"));
+                //Location loc= getMLocation().getValue();
+                //LatLng actual= new LatLng(loc.getLatitude(), loc.getLongitude());
+                //Marcadores
+
+                //efecto de camar;
+                CameraPosition camPos = new CameraPosition.Builder()
+                        .target(SANLUIS)
+                        .zoom(19)
+                        .bearing(45)//inclinacion
+                        .tilt(70)
+                        .build();
+                CameraUpdate update = CameraUpdateFactory.newCameraPosition(camPos);
+                googleMap.animateCamera(update);
+
+            }
         }
-    }
 
 }

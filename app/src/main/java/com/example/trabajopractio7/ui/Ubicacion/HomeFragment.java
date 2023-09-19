@@ -24,17 +24,26 @@ public class HomeFragment extends Fragment {
     private HomeViewModel mv;
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        HomeViewModel homeViewModel =
+        HomeViewModel mv =
                 new ViewModelProvider(this).get(HomeViewModel.class);
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+        mv.lecturaPermanente();
+
         mv.getMLocation().observe(getActivity(), new Observer<Location>() {
             @Override
             public void onChanged(Location location) {
                 binding.tvMostrar.setText(location.getLatitude()+" "+location.getLongitude());
+
             }
         });
+       /* mv.getMLocation().observe(getActivity(), new Observer<Location>() {
+            @Override
+            public void onChanged(Location location) {
+                mv.obtenerMapa();
+            }
+        });*/
         mv.getMMapa().observe(getActivity(), new Observer<HomeViewModel.MapaActual>() {
             @Override
             public void onChanged(HomeViewModel.MapaActual mapaActual) {
@@ -43,7 +52,9 @@ public class HomeFragment extends Fragment {
                 smf.getMapAsync(mapaActual);
             }
         });
-        mv.obtenerMapa();
+
+
+
         return root;
     }
 
